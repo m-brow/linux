@@ -79,6 +79,60 @@ static void raid6_vpermxor$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
 	preempt_enable();
 }
 
+static void noinline raid6_vpermxor$#_xor_syndrome_real(int disks, int start,
+						int stop, size_t bytes, 
+						void **ptrs)
+{
+	u8 **dptr = (u8 **)ptrs;
+	u8 *p, *q;
+	int d, z, z0;
+	unative_t wp$$, wq$$, wd$$;
+
+	z0 = stop;		/* Highest data disk */
+	p = dptr[disks - 2];		/* XOR parity */
+	q = dptr[disks - 1];		/* RS syndrome */
+
+	for (d = 0; d < bytes; d += NSIZE*$#) {
+		wp$$ = wq$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
+
+		for (z = z0-1; z >= start; z--) {
+			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+			/* P syndrome */
+			wp$$ = vec_xor(wp$$, wd$$);
+
+			/*Q syndrome */
+			asm("vpermxor %0,%1,%2,%3":"=v"(wq$$):"v"(gf_high), "v"(gf_low), "v"(wq$$));
+			wq$$ = vec_xor(wq$$, wd$$);
+		}
+		/* P/Q left optimisation */
+		for (z = start - 1; z >= 0; z--) {
+			asm("vpermxor %0,%1,%2,%3":"=v"(wq$$):"v"(gf_high), "v"(gf_low), "v"(wq$$));
+		}
+
+		wd$$ = *(unative_t *)&q[d+$$*NSIZE];
+		wq$$ = vec_xor(wq$$, wd$$);
+		
+		wd$$ = *(unative_t *)&p[d+$$*NSIZE];
+		wp$$ = vec_xor(wp$$, wd$$);
+
+		*(unative_t *)&p[d+NSIZE*$$] = wp$$;
+		*(unative_t *)&q[d+NSIZE*$$] = wq$$;
+	}
+
+}
+
+static void raid6_vpermxor$#_xor_syndrome(int disks, int start, int stop,
+						size_t bytes, void **ptrs)
+{
+	preempt_disable();
+	enable_kernel_altivec();
+
+	raid6_vpermxor$#_xor_syndrome_real(disks, start, stop, bytes, ptrs);
+
+	disable_kernel_altivec();
+	preempt_enable();
+}
+
 int raid6_have_altivec_vpermxor(void);
 #if $# == 1
 int raid6_have_altivec_vpermxor(void)
@@ -96,7 +150,7 @@ int raid6_have_altivec_vpermxor(void)
 
 const struct raid6_calls raid6_vpermxor$# = {
 	raid6_vpermxor$#_gen_syndrome,
-	NULL,
+	raid6_vpermxor$#_xor_syndrome,
 	raid6_have_altivec_vpermxor,
 	"vpermxor$#",
 	0
