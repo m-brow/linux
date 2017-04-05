@@ -108,6 +108,65 @@ static void raid6_altivec$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
 	preempt_enable();
 }
 
+static void noinline raid6_altivec$#_xor_syndrome_real (int disks, int start,
+						  	int stop, size_t bytes,
+						  	void **ptrs)
+{
+	u8 **dptr = (u8 **)ptrs;
+	u8 *p, *q;
+	int d, z, z0;
+
+	unative_t wd$$, wq$$, wp$$, w1$$, w2$$;
+	unative_t x1d = NBYTES(0x1d);
+
+	z0 = stop;		/* Highest data disk */
+	p = dptr[disks - 2];		/* XOR parity */
+	q = dptr[disks - 1];		/* RS syndrome */
+
+	for ( d = 0 ; d < bytes ; d += NSIZE*$# ) {
+		wq$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
+		wd$$ = *(unative_t *)&p[d+$$*NSIZE];
+		wp$$ = vec_xor(wd$$, wq$$);
+
+		for ( z = z0-1 ; z >= start ; z-- ) {
+			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
+			wp$$ = vec_xor(wp$$, wd$$);
+			w2$$ = MASK(wq$$);
+			w1$$ = SHLBYTE(wq$$);
+			w2$$ = vec_and(w2$$, x1d);
+			w1$$ = vec_xor(w1$$, w2$$);
+			wq$$ = vec_xor(w1$$, wd$$);
+		}
+		/* P/Q left optimisation */
+		for (z = start - 1; z >= 0; z--) {
+			w2$$ = MASK(wq$$);
+			w1$$ = SHLBYTE(wq$$);
+			w2$$ = vec_and(w2$$, x1d);
+			wq$$ = vec_xor(w1$$, w2$$);
+		}
+		
+		wd$$ = *(unative_t *)&q[d+$$*NSIZE];
+		wq$$ = vec_xor(wq$$, wd$$);
+
+		*(unative_t *)&p[d+NSIZE*$$] = wp$$;
+		*(unative_t *)&q[d+NSIZE*$$] = wq$$;
+	}
+
+}
+
+static void raid6_altivec$#_xor_syndrome(int disks, int start, int stop,
+					 size_t bytes, void **ptrs)
+{
+	preempt_disable();
+	enable_kernel_altivec();
+
+	raid6_altivec$#_xor_syndrome_real(disks, start, stop, bytes, ptrs);
+
+	disable_kernel_altivec();
+	preempt_enable();
+
+}
+
 int raid6_have_altivec(void);
 #if $# == 1
 int raid6_have_altivec(void)
@@ -123,7 +182,7 @@ int raid6_have_altivec(void)
 
 const struct raid6_calls raid6_altivec$# = {
 	raid6_altivec$#_gen_syndrome,
-	NULL,			/* XOR not yet implemented */
+	raid6_altivec$#_xor_syndrome,
 	raid6_have_altivec,
 	"altivecx$#",
 	0
