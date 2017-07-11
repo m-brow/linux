@@ -529,8 +529,7 @@ static void mpsc_sdma_start_tx(struct mpsc_port_info *pi)
 				DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			invalidate_dcache_range((ulong)txre,
-					(ulong)txre + MPSC_TXRE_SIZE);
+			invalidate_dcache_range(txre, MPSC_TXRE_SIZE);
 #endif
 
 		if (be32_to_cpu(txre->cmdstat) & SDMA_DESC_CMDSTAT_O) {
@@ -875,9 +874,7 @@ static void mpsc_init_rings(struct mpsc_port_info *pi)
 			MPSC_DMA_ALLOC_SIZE, DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			flush_dcache_range((ulong)pi->dma_region,
-					(ulong)pi->dma_region
-					+ MPSC_DMA_ALLOC_SIZE);
+			flush_dcache_range(pi->dma_region, MPSC_DMA_ALLOC_SIZE);
 #endif
 
 	return;
@@ -950,8 +947,7 @@ static int mpsc_rx_intr(struct mpsc_port_info *pi, unsigned long *flags)
 			DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 	if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-		invalidate_dcache_range((ulong)rxre,
-				(ulong)rxre + MPSC_RXRE_SIZE);
+		invalidate_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 
 	/*
@@ -984,8 +980,7 @@ static int mpsc_rx_intr(struct mpsc_port_info *pi, unsigned long *flags)
 				DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			invalidate_dcache_range((ulong)bp,
-					(ulong)bp + MPSC_RXBE_SIZE);
+			invalidate_dcache_range(bp, MPSC_RXBE_SIZE);
 #endif
 
 		/*
@@ -1060,8 +1055,7 @@ next_frame:
 				DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			flush_dcache_range((ulong)rxre,
-					(ulong)rxre + MPSC_RXRE_SIZE);
+			flush_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 
 		/* Advance to next descriptor */
@@ -1072,8 +1066,7 @@ next_frame:
 				DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			invalidate_dcache_range((ulong)rxre,
-					(ulong)rxre + MPSC_RXRE_SIZE);
+			invalidate_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 		rc = 1;
 	}
@@ -1106,8 +1099,7 @@ static void mpsc_setup_tx_desc(struct mpsc_port_info *pi, u32 count, u32 intr)
 			DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 	if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-		flush_dcache_range((ulong)txre,
-				(ulong)txre + MPSC_TXRE_SIZE);
+		flush_dcache_range(txre, MPSC_TXRE_SIZE);
 #endif
 }
 
@@ -1153,8 +1145,7 @@ static void mpsc_copy_tx_data(struct mpsc_port_info *pi)
 				DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			flush_dcache_range((ulong)bp,
-					(ulong)bp + MPSC_TXBE_SIZE);
+			flush_dcache_range(bp, MPSC_TXBE_SIZE);
 #endif
 		mpsc_setup_tx_desc(pi, i, 1);
 
@@ -1179,8 +1170,7 @@ static int mpsc_tx_intr(struct mpsc_port_info *pi)
 				DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			invalidate_dcache_range((ulong)txre,
-					(ulong)txre + MPSC_TXRE_SIZE);
+			invalidate_dcache_range(txre, MPSC_TXRE_SIZE);
 #endif
 
 		while (!(be32_to_cpu(txre->cmdstat) & SDMA_DESC_CMDSTAT_O)) {
@@ -1198,8 +1188,7 @@ static int mpsc_tx_intr(struct mpsc_port_info *pi)
 					MPSC_TXRE_SIZE, DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 			if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-				invalidate_dcache_range((ulong)txre,
-						(ulong)txre + MPSC_TXRE_SIZE);
+				invalidate_dcache_range(txre, MPSC_TXRE_SIZE);
 #endif
 		}
 
@@ -1580,8 +1569,7 @@ static int mpsc_get_poll_char(struct uart_port *port)
 			       MPSC_RXRE_SIZE, DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			invalidate_dcache_range((ulong)rxre,
-			(ulong)rxre + MPSC_RXRE_SIZE);
+			invalidate_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 		/*
 		 * Loop through Rx descriptors handling ones that have
@@ -1596,8 +1584,7 @@ static int mpsc_get_poll_char(struct uart_port *port)
 				       MPSC_RXBE_SIZE, DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 			if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-				invalidate_dcache_range((ulong)bp,
-					(ulong)bp + MPSC_RXBE_SIZE);
+				invalidate_dcache_range(bp, MPSC_RXBE_SIZE);
 #endif
 			if ((unlikely(cmdstat & (SDMA_DESC_CMDSTAT_BR |
 			 SDMA_DESC_CMDSTAT_FR | SDMA_DESC_CMDSTAT_OR))) &&
@@ -1622,8 +1609,7 @@ static int mpsc_get_poll_char(struct uart_port *port)
 				       MPSC_RXRE_SIZE, DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 			if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-				flush_dcache_range((ulong)rxre,
-					   (ulong)rxre + MPSC_RXRE_SIZE);
+				flush_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 
 			/* Advance to next descriptor */
@@ -1635,8 +1621,7 @@ static int mpsc_get_poll_char(struct uart_port *port)
 				       MPSC_RXRE_SIZE, DMA_FROM_DEVICE);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 			if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-				invalidate_dcache_range((ulong)rxre,
-						(ulong)rxre + MPSC_RXRE_SIZE);
+				invalidate_dcache_range(rxre, MPSC_RXRE_SIZE);
 #endif
 		}
 
@@ -1748,8 +1733,7 @@ static void mpsc_console_write(struct console *co, const char *s, uint count)
 				DMA_BIDIRECTIONAL);
 #if defined(CONFIG_PPC32) && !defined(CONFIG_NOT_COHERENT_CACHE)
 		if (pi->cache_mgmt) /* GT642[46]0 Res #COMM-2 */
-			flush_dcache_range((ulong)bp,
-					(ulong)bp + MPSC_TXBE_SIZE);
+			flush_dcache_range(bp, MPSC_TXBE_SIZE);
 #endif
 		mpsc_setup_tx_desc(pi, i, 0);
 		pi->txr_head = (pi->txr_head + 1) & (MPSC_TXR_ENTRIES - 1);

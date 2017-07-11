@@ -730,9 +730,8 @@ static void bfin_spi_pump_transfers(unsigned long data)
 
 			/* invalidate caches, if needed */
 			if (bfin_addr_dcacheable((unsigned long) drv_data->rx))
-				invalidate_dcache_range((unsigned long) drv_data->rx,
-							(unsigned long) (drv_data->rx +
-							drv_data->len_in_bytes));
+				invalidate_dcache_range(drv_data->rx,
+							drv_data->len_in_bytes);
 
 			dma_config |= WNR;
 			dma_start_addr = (unsigned long)drv_data->rx;
@@ -743,9 +742,8 @@ static void bfin_spi_pump_transfers(unsigned long data)
 
 			/* flush caches, if needed */
 			if (bfin_addr_dcacheable((unsigned long) drv_data->tx))
-				flush_dcache_range((unsigned long) drv_data->tx,
-						(unsigned long) (drv_data->tx +
-						drv_data->len_in_bytes));
+				flush_dcache_range(drv_data->tx,
+						drv_data->len_in_bytes);
 
 			dma_start_addr = (unsigned long)drv_data->tx;
 			cr |= BIT_CTL_TIMOD_DMA_TX;

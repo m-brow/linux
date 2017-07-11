@@ -204,9 +204,9 @@ __dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t *handle, gfp_t 
 	 * kernel direct-mapped region for device DMA.
 	 */
 	{
-		unsigned long kaddr = (unsigned long)page_address(page);
+		void *kaddr = page_address(page);
 		memset(page_address(page), 0, size);
-		flush_dcache_range(kaddr, kaddr + size);
+		flush_dcache_range(kaddr, size);
 	}
 
 	/*
@@ -316,9 +316,6 @@ EXPORT_SYMBOL(__dma_free_coherent);
  */
 void __dma_sync(void *vaddr, size_t size, int direction)
 {
-	unsigned long start = (unsigned long)vaddr;
-	unsigned long end   = start + size;
-
 	switch (direction) {
 	case DMA_NONE:
 		BUG();
@@ -328,15 +325,15 @@ void __dma_sync(void *vaddr, size_t size, int direction)
 		 * the potential for discarding uncommitted data from the cache
 		 */
 		if ((start | end) & (L1_CACHE_BYTES - 1))
-			flush_dcache_range(start, end);
+			flush_dcache_range(vaddr, size);
 		else
-			invalidate_dcache_range(start, end);
+			invalidate_dcache_range(vaddr, size);
 		break;
 	case DMA_TO_DEVICE:		/* writeback only */
-		clean_dcache_range(start, end);
+		clean_dcache_range(vaddr, size);
 		break;
 	case DMA_BIDIRECTIONAL:	/* writeback and invalidate */
-		flush_dcache_range(start, end);
+		flush_dcache_range(vaddr, size);
 		break;
 	}
 }

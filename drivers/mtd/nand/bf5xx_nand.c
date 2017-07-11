@@ -492,11 +492,9 @@ static void bf5xx_nand_dma_rw(struct mtd_info *mtd,
 	 * can be introduced to your driver.
 	 */
 	if (is_read)
-		invalidate_dcache_range((unsigned int)buf,
-				(unsigned int)(buf + chip->ecc.size));
+		invalidate_dcache_range(buf, chip->ecc.size);
 	else
-		flush_dcache_range((unsigned int)buf,
-				(unsigned int)(buf + chip->ecc.size));
+		flush_dcache_range(buf, chip->ecc.size);
 
 	/*
 	 * This register must be written before each page is

@@ -186,8 +186,7 @@ static int uninorth_insert_memory(struct agp_memory *mem, off_t pg_start, int ty
 		else
 			gp[i] =	cpu_to_le32((page_to_phys(mem->pages[i]) & 0xFFFFF000UL) |
 					    0x1UL);
-		flush_dcache_range((unsigned long)__va(page_to_phys(mem->pages[i])),
-				   (unsigned long)__va(page_to_phys(mem->pages[i]))+0x1000);
+		flush_dcache_range(__va(page_to_phys(mem->pages[i])), 0x1000);
 	}
 	mb();
 	uninorth_tlbflush(mem);
@@ -416,8 +415,7 @@ static int uninorth_create_gatt_table(struct agp_bridge_data *bridge)
 
 	bridge->gatt_table_real = (u32 *) table;
 	/* Need to clear out any dirty data still sitting in caches */
-	flush_dcache_range((unsigned long)table,
-			   (unsigned long)table_end + 1);
+	flush_dcache_range(table,  (unsigned long)(table_end - table) + 1);
 	bridge->gatt_table = vmap(uninorth_priv.pages_arr, (1 << page_order), 0, PAGE_KERNEL_NCG);
 
 	if (bridge->gatt_table == NULL)

@@ -56,7 +56,7 @@
 static inline void dpaa_flush(void *p)
 {
 #ifdef CONFIG_PPC
-	flush_dcache_range((unsigned long)p, (unsigned long)p+64);
+	flush_dcache_range(p, 64);
 #elif defined(CONFIG_ARM32)
 	__cpuc_flush_dcache_area(p, 64);
 #elif defined(CONFIG_ARM64)

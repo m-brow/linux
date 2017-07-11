@@ -225,7 +225,7 @@ static void __init mpc512x_init_diu(void)
 	phys_addr_t desc;
 	void __iomem *vaddr;
 	unsigned long mode, pix_fmt, res, bpp;
-	unsigned long dst;
+	void *dst;
 
 	np = of_find_compatible_node(NULL, NULL, "fsl,mpc5121-diu");
 	if (!np) {
@@ -254,8 +254,8 @@ static void __init mpc512x_init_diu(void)
 	}
 	memcpy(&diu_shared_fb.ad0, vaddr, sizeof(struct diu_ad));
 	/* flush fb area descriptor */
-	dst = (unsigned long)&diu_shared_fb.ad0;
-	flush_dcache_range(dst, dst + sizeof(struct diu_ad) - 1);
+	dst = &diu_shared_fb.ad0;
+	flush_dcache_range(dst, sizeof(struct diu_ad) - 1);
 
 	res = in_be32(&diu_reg->disp_size);
 	pix_fmt = in_le32(vaddr);
@@ -274,8 +274,8 @@ static void __init mpc512x_init_diu(void)
 	}
 	memcpy(&diu_shared_fb.gamma, vaddr, sizeof(diu_shared_fb.gamma));
 	/* flush gamma table */
-	dst = (unsigned long)&diu_shared_fb.gamma;
-	flush_dcache_range(dst, dst + sizeof(diu_shared_fb.gamma) - 1);
+	dst = &diu_shared_fb.gamma;
+	flush_dcache_range(dst, sizeof(diu_shared_fb.gamma) - 1);
 
 	iounmap(vaddr);
 	out_be32(&diu_reg->gamma, virt_to_phys(&diu_shared_fb.gamma));

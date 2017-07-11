@@ -152,12 +152,13 @@ static void dart_cache_sync(unsigned int *base, unsigned int count)
 	 * comment in Darwin indicating that the memory controller
 	 * can prefetch unmapped memory under some circumstances.
 	 */
+	unsigned long size = (count + 1) * sizeof(unsigned int);
 	unsigned long start = (unsigned long)base;
-	unsigned long end = start + (count + 1) * sizeof(unsigned int);
+	unsigned long end = start + size;
 	unsigned int tmp;
 
 	/* Perform a standard cache flush */
-	flush_inval_dcache_range(start, end);
+	flush_inval_dcache_range(base, size);
 
 	/*
 	 * Perform the sequence described in the CPC925 manual to

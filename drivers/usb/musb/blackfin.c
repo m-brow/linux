@@ -90,8 +90,7 @@ static void bfin_write_fifo(struct musb_hw_ep *hw_ep, u16 len, const u8 *src)
 	if (!ANOMALY_05000380 && epnum != 0) {
 		u16 dma_reg;
 
-		flush_dcache_range((unsigned long)src,
-			(unsigned long)(src + len));
+		flush_dcache_range(src, len);
 
 		/* Setup DMA address register */
 		dma_reg = (u32)src;
@@ -144,8 +143,7 @@ static void bfin_read_fifo(struct musb_hw_ep *hw_ep, u16 len, u8 *dst)
 	if (ANOMALY_05000467 && epnum != 0) {
 		u16 dma_reg;
 
-		invalidate_dcache_range((unsigned long)dst,
-			(unsigned long)(dst + len));
+		invalidate_dcache_range(dst, len);
 
 		/* Setup DMA address register */
 		dma_reg = (u32)dst;

@@ -166,14 +166,12 @@ static void qoriq_cpu_kill(unsigned int cpu)
  */
 static inline void flush_spin_table(void *spin_table)
 {
-	flush_dcache_range((ulong)spin_table,
-		(ulong)spin_table + sizeof(struct epapr_spin_table));
+	flush_dcache_range(spin_table, sizeof(struct epapr_spin_table));
 }
 
 static inline u32 read_spin_table_addr_l(void *spin_table)
 {
-	flush_dcache_range((ulong)spin_table,
-		(ulong)spin_table + sizeof(struct epapr_spin_table));
+	flush_dcache_range(spin_table, sizeof(struct epapr_spin_table));
 	return in_be32(&((struct epapr_spin_table *)spin_table)->addr_l);
 }
 

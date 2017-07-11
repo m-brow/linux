@@ -866,8 +866,7 @@ static void bfin_bmdma_setup(struct ata_queued_cmd *qc)
 	/* Set the last descriptor to stop mode */
 	dma_desc_cpu[qc->n_elem - 1].cfg &= ~(DMAFLOW | NDSIZE);
 
-	flush_dcache_range((unsigned int)dma_desc_cpu,
-		(unsigned int)dma_desc_cpu +
+	flush_dcache_range(dma_desc_cpu,
 			qc->n_elem * sizeof(struct dma_desc_array));
 
 	/* Enable ATA DMA operation*/

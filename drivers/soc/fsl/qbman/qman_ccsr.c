@@ -450,8 +450,7 @@ static int zero_priv_mem(struct device *dev, struct device_node *node,
 		return -ENOMEM;
 
 	memset_io(tmpp, 0, sz);
-	flush_dcache_range((unsigned long)tmpp,
-			   (unsigned long)tmpp + sz);
+	flush_dcache_range(tmpp, sz);
 	iounmap(tmpp);
 
 	return 0;

@@ -111,8 +111,9 @@ static void smu_i2c_retry(unsigned long data);
 
 static void smu_start_cmd(void)
 {
-	unsigned long faddr, fend;
 	struct smu_cmd *cmd;
+	unsigned long flen;
+	void *faddr;
 
 	if (list_empty(&smu->cmd_list))
 		return;
@@ -132,9 +133,9 @@ static void smu_start_cmd(void)
 	memcpy(smu->cmd_buf->data, cmd->data_buf, cmd->data_len);
 
 	/* Flush command and data to RAM */
-	faddr = (unsigned long)smu->cmd_buf;
-	fend = faddr + smu->cmd_buf->length + 2;
-	flush_inval_dcache_range(faddr, fend);
+	faddr = smu->cmd_buf;
+	flen = smu->cmd_buf->length + 2;
+	flush_inval_dcache_range(faddr, flen);
 
 
 	/* We also disable NAP mode for the duration of the command
@@ -186,8 +187,8 @@ static irqreturn_t smu_db_intr(int irq, void *arg)
 		goto bail;
 
 	if (rc == 0) {
-		unsigned long faddr;
 		int reply_len;
+		void *faddr;
 		u8 ack;
 
 		/* CPU might have brought back the cache line, so we need
@@ -195,8 +196,8 @@ static irqreturn_t smu_db_intr(int irq, void *arg)
 		 * flush the entire buffer for now as we haven't read the
 		 * reply length (it's only 2 cache lines anyway)
 		 */
-		faddr = (unsigned long)smu->cmd_buf;
-		flush_inval_dcache_range(faddr, faddr + 256);
+		faddr = smu->cmd_buf;
+		flush_inval_dcache_range(faddr, 256);
 
 		/* Now check ack */
 		ack = (~cmd->cmd) & 0xff;

@@ -175,8 +175,7 @@ static int sdh_setup_data(struct sdh_host *host, struct mmc_data *data)
 				host->sg_cpu[i].x_modify);
 		}
 	}
-	flush_dcache_range((unsigned int)host->sg_cpu,
-		(unsigned int)host->sg_cpu +
+	flush_dcache_range(host->sg_cpu,
 			host->dma_len * sizeof(struct dma_desc_array));
 	/* Set the last descriptor to stop mode */
 	host->sg_cpu[host->dma_len - 1].cfg &= ~(DMAFLOW | NDSIZE);
