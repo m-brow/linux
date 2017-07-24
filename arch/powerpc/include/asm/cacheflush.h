@@ -97,9 +97,48 @@ static inline void invalidate_dcache_range(unsigned long start,
 
 #endif /* CONFIG_PPC32 */
 #ifdef CONFIG_PPC64
-extern void flush_dcache_range(unsigned long start, unsigned long stop);
-extern void flush_inval_dcache_range(unsigned long start, unsigned long stop);
-#endif
+static inline void flush_icache_range(unsigned long start, unsigned long stop)
+{
+	unsigned int block_shift = ppc64_caches.l1i.log_block_size;
+	unsigned int block_size = ppc64_caches.l1i.block_size;
+
+	unsigned long size = _ALIGN(stop - start, block_size);
+	void *addr = (void *)_ALIGN_DOWN(start, block_size);
+	unsigned int i;
+
+	for (i = 0; i < size >> block_shift; i++, addr += block_size)
+		dcbst(addr);
+}
+
+static inline void flush_dcache_range(unsigned long start, unsigned long stop)
+{
+	unsigned int block_shift = ppc64_caches.l1d.log_block_size;
+	unsigned int block_size = ppc64_caches.l1d.block_size;
+
+	unsigned long size = _ALIGN(stop - start, block_size);
+	void *addr = (void *)_ALIGN_DOWN(start, block_size);
+	unsigned int i;
+
+	for (i = 0; i < size >> block_shift; i++, addr += block_size)
+		dcbf(addr);
+	mb();	/* sync */
+}
+
+static inline void flush_inval_dcache_range(unsigned long start,
+					    unsigned long stop)
+{
+	unsigned int block_shift = ppc64_caches.l1d.log_block_size;
+	unsigned int block_size = ppc64_caches.l1d.block_size;
+
+	unsigned long size = _ALIGN(stop - start, block_size);
+	void *addr = (void *)_ALIGN_DOWN(start, block_size);
+	unsigned int i;
+
+	for (i = 0; i < size >> block_shift; i++, addr += block_size)
+		dcbi(addr);
+	mb();	/* sync */
+}
+#endif /* CONFIG_PPC64 */
 
 #define copy_to_user_page(vma, page, vaddr, dst, src, len) \
 	do { \
