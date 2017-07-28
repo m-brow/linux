@@ -724,6 +724,39 @@ static int emulate_vsx(unsigned char __user *addr, unsigned int reg,
 }
 #endif
 
+static void *get_dar_ds_form(struct pt_regs *regs, unsigned long instr)
+{
+	unsigned long ra, ds, b;
+
+	ra = (instr >> 16) & 0x1f;
+	ds = (instr >> 2) & 0x3fff;
+	b = (ra) ? regs->gpr[ra] : 0;
+
+	return (void *)(b + ds);
+}
+
+static void *get_dar_dq_form(struct pt_regs *regs, unsigned long instr)
+{
+	unsigned long ra, dq, b;
+
+	ra = (instr >> 16) & 0x1f;
+	dq = (instr >> 3) & 0xfff;
+	b = (ra) ? regs->gpr[ra] : 0;
+
+	return (void *)(b + dq);
+}
+
+static void *get_dar_x_form(struct pt_regs *regs, unsigned long instr)
+{
+	unsigned long ra, rb, b;
+
+	ra = (instr >> 16) & 0x1f;
+	rb = (instr >> 11) & 0x1f;
+	b = (ra) ? regs->gpr[ra] : 0;
+
+	return (void *)(b + regs->gpr[rb]);
+}
+
 /*
  * Called on alignment exception. Attempts to fixup
  *
@@ -850,6 +883,19 @@ int fix_alignment(struct pt_regs *regs)
 
 	/* DAR has the operand effective address */
 	addr = (unsigned char __user *)regs->dar;
+
+	/* Calculate DAR for some store/load instructions */
+	if ((instruction & 0xfc000003) == 0xe4000000 ||		/* lfdp */
+	    (instruction & 0xfc000003) == 0xf4000000 ||		/* stfdp */
+	    (instruction & 0xfc000003) == 0xf8000002)		/* stq */
+		addr = get_dar_ds_form(regs, instruction);
+	else if ((instruction & 0xfc0007fe) == 0x7c00062e ||	/* lfdpx */
+		 (instruction & 0xfc0007fe) == 0x7c00072e ||	/* stfdpx */
+		 (instruction & 0xfc0007fe) == 0x7c000228 ||	/* lqarx */
+		 (instruction & 0xfc0007ff) == 0x7c00016d)	/* stqcx */
+		addr = get_dar_x_form(regs, instruction);
+	else if ((instruction & 0xfc000000) == 0xe0000000)	/* lq */
+		addr = get_dar_dq_form(regs, instruction);
 
 #ifdef CONFIG_VSX
 	if ((instruction & 0xfc00003e) == 0x7c000018) {
