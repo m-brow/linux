@@ -48,6 +48,24 @@ static inline void __flush_dcache_icache_phys(unsigned long physaddr)
 
 #ifdef CONFIG_PPC32
 /*
+ * Write any modified data cache blocks out to memory
+ * and invalidate the corresponding instruction cache blocks.
+ * This is a no-op on the 601.
+ */
+static inline void flush_icache_range(unsigned long start, unsigned long stop)
+{
+	void *addr = (void *)(start & ~(L1_CACHE_BYTES - 1));
+	unsigned long size = stop - (unsigned long)addr + (L1_CACHE_BYTES - 1);
+	unsigned int i;
+
+	for (i = 0; i < size >> L1_CACHE_SHIFT; i++, addr += L1_CACHE_BYTES) {
+		dcbst(addr);
+		icbi(addr);
+	}
+	mb();	/* sync */
+}
+
+/*
  * Write any modified data cache blocks out to memory and invalidate them.
  * Does not invalidate the corresponding instruction cache blocks.
  */
@@ -97,6 +115,38 @@ static inline void invalidate_dcache_range(unsigned long start,
 
 #endif /* CONFIG_PPC32 */
 #ifdef CONFIG_PPC64
+/*
+ * Write any modified data cache blocks out to memory
+ * and invalidate the corresponding instruction cache blocks.
+ */
+static inline void flush_icache_range(unsigned long start, unsigned long stop)
+{
+	unsigned int cache_shift, cache_bytes;
+	unsigned long size;
+	void *addr;
+	int i;
+
+	/* Flush data cache to memory */
+	cache_shift = ppc64_caches.l1d.block_size;
+	cache_bytes = ppc64_caches.l1d.log_block_size;
+	size = _ALIGN(stop - start, cache_bytes);
+	addr = (void *)_ALIGN_DOWN(start, cache_bytes);
+		
+	for (i = 0; i < size >> cache_shift; i++, addr += cache_bytes)
+		dcbst(addr);
+	mb();	/* sync */
+
+	/* Now invalidate the instruction cache */
+	cache_bytes = ppc64_caches.l1i.block_size;
+	cache_shift = ppc64_caches.l1i.log_block_size;
+	size = _ALIGN(stop - start, cache_bytes);
+	addr = (void *)_ALIGN_DOWN(start, cache_bytes);
+
+	for (i = 0; i < size >> cache_shift; i++, addr += cache_bytes)
+		icbi(addr);
+	mb();	/* sync */
+}
+
 static inline void flush_dcache_range(unsigned long start, unsigned long stop)
 {
 	unsigned int cache_shift = ppc64_caches.l1d.log_block_size;
